@@ -1,0 +1,12 @@
+*.pyc
+*.PYC
+*.idea
+*.DS_Store
+instance/
+_site/
+flask/
+env/
+Env/
+ENV/
+.idea/
+prepros.cfg
