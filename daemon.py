@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-import sys, os, time, atexit
+import sys
+import os
+import time
+import atexit
 from signal import SIGTERM
 
 
@@ -11,10 +14,14 @@ class Daemon(object):
     """
 
     def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+        self.CONFIG = {}
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
         self.pidfile = pidfile
+        self.si = None
+        self.so = None
+        self.se = None
 
     def daemonize(self):
         """

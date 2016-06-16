@@ -1,8 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import sys, re
-import os, subprocess
-import shutil, pwd
+import sys
+import re
+import os
+import subprocess
+import shutil
+import pwd
 from daemon import Daemon
 import time
 from config import DEPLOY_DIR, APP_USER
@@ -113,7 +116,6 @@ class DeployProcess(Daemon):
 
                     for conf_file in file_list:
                         bak = conf_file + '.backup'
-                        f_ok = False
                         if os.path.exists(conf_file):
                             if os.path.exists(bak):
                                 try:
@@ -141,9 +143,8 @@ class DeployProcess(Daemon):
                                 shutil.copy(fromfile, conf_file)
                                 os.chown(conf_file, ROOT_USER[2], ROOT_USER[3])
                                 os.chmod(conf_file, 0644)
-                                f_ok = True
                             except:
-                                f_ok = False
+                                pass
 
                     for CMD_RESTART in self.CONFIG['APP_RESTART']:
                         fo.writelines(('\n--[%s]--\n' % CMD_RESTART))
