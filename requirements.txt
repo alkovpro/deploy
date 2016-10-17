@@ -1,7 +1,1 @@
 Flask
-itsdangerous
-Jinja2
-MarkupSafe
-uWSGI
-Werkzeug
-wheel

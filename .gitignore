@@ -9,3 +9,5 @@ Env/
 ENV/
 .idea/
 prepros.cfg
+data/
+__pycache__
