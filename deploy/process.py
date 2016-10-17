@@ -12,13 +12,13 @@ class CommandProcessor:
     no_err_file = False
 
     def __init__(self):
-        self.file_std = open(config.LOG_FILE, 'w+t') #  ''a+' if os.path.exists(config.LOG_FILE) else 'w+')
+        self.file_std = open(config.LOG_FILE, 'w+t')  # ''a+' if os.path.exists(config.LOG_FILE) else 'w+')
         self.file_std.truncate()
 
         if not config.ERR_FILE:
             self.no_err_file = True
         else:
-            self.file_err = open(config.ERR_FILE, 'w+t') #  'a+' if os.path.exists(config.ERR_FILE) else 'w+')
+            self.file_err = open(config.ERR_FILE, 'w+t')  # 'a+' if os.path.exists(config.ERR_FILE) else 'w+')
             self.file_err.truncate()
 
         write(config.TIME_FILE, [time.ctime()], True)
@@ -35,6 +35,8 @@ class CommandProcessor:
 
     def do_sequence(self, cmd_list):
         stdout, stderr = '', ''
+        success = True
+        returncode = 0
         for cmd_key in sorted(cmd_list.keys()):
             command = cmd_list[cmd_key]
             function = self.cmd_none
@@ -57,7 +59,10 @@ class CommandProcessor:
             if not self.no_err_file:
                 self.file_err.writelines(['\n--[%s: %s]--\n' % (cmd_name, cmd_text)])
 
-            stdout, stderr, success = function(cmd_text, command, {'stdout': stdout, 'stderr': stderr})
+            stdout, stderr, success, returncode = function(cmd_text, command, {'stdout': stdout,
+                                                                               'stderr': stderr,
+                                                                               'success': success,
+                                                                               'returncode': returncode})
 
             if type(stdout) is bytes:
                 stdout = stdout.decode()
@@ -77,8 +82,16 @@ class CommandProcessor:
             else:
                 self.file_err.write(stderr)
 
+            tmp = '<span style="color:{color}">[returncode: {code}]</span>\n'.format(
+                color='green' if returncode == 0 else 'red',
+                code=returncode)
+
+            self.file_std.write(tmp)
+            if not self.no_err_file:
+                self.file_err.write(tmp)
+
     def cmd_none(self, cmd='', params=None, extra=None):
-        return
+        return '', '', True, 0
 
     def cmd_cd(self, cmd='', params=None, extra=None):
         try:
@@ -86,11 +99,13 @@ class CommandProcessor:
             success = True
         except:
             success = False
-        return '', '', success
+        return '', '', success, 0 if success else -1
 
     def cmd_cmd(self, cmd='', params=None, extra=None):
         stdout = ''
         stderr = ''
+        success = False
+        returncode = -1
         try:
             if 'user' in params:
                 cmd = "su --command '%s' %s" % (cmd, params['user'])
@@ -99,9 +114,10 @@ class CommandProcessor:
             stdout = p.stdout.read()
             stderr = p.stderr.read()
             success = True
+            returncode = p.wait()
         except:
-            success = False
-        return stdout, stderr, success
+            pass
+        return stdout, stderr, success, returncode
 
     def cmd_if(self, cmd='', params=None, extra=None):
         if extra is None:
@@ -117,11 +133,10 @@ class CommandProcessor:
                 self.do_sequence(params.get('then', {}))
             else:
                 self.do_sequence(params.get('else', {}))
-        return '', '', success
+        return '', '', success, 0 if success else -1
 
 
 class DeployProcess(Daemon):
-
     def clear_triggers(self):
         delete(config.PROCESS)
         delete(config.QUEUE)
